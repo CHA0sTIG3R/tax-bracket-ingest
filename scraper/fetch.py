@@ -1,0 +1,36 @@
+IRS_URL = "https://www.irs.gov/filing/federal-income-tax-rates-and-brackets"
+
+# fetch data from the IRS URL 
+import requests
+def fetch(url: str) -> str:
+    """
+    Fetch the content from the given URL.
+    
+    Args:
+        url (str): The URL to fetch data from.
+    Returns:
+        str: The content of the URL.
+    Raises:
+        requests.RequestException: If there is an error during the request.
+    """
+    response = requests.get(url)
+    response.raise_for_status()  # Raise an error for bad responses
+    return response.content
+
+def fetch_irs_data() -> str:
+    """
+    Fetch the IRS data from the predefined URL.
+    
+    Returns:
+        str: The content of the IRS data page.
+    """
+    return fetch(IRS_URL)
+
+if __name__ == "__main__":
+    # Example usage
+    try:
+        data = fetch_irs_data()
+        print("Data fetched successfully.")
+        # You can process the data further here
+    except requests.RequestException as e:
+        print(f"An error occurred while fetching data: {e}")
