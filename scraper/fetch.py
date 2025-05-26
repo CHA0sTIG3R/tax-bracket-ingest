@@ -25,12 +25,3 @@ def fetch_irs_data() -> str:
         str: The content of the IRS data page.
     """
     return fetch(IRS_URL)
-
-if __name__ == "__main__":
-    # Example usage
-    try:
-        data = fetch_irs_data()
-        print("Data fetched successfully.")
-        # You can process the data further here
-    except requests.RequestException as e:
-        print(f"An error occurred while fetching data: {e}")
