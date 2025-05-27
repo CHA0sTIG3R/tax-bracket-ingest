@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
+import bs4
 
 
-def parse_html(html_content):
+def parse_html(html_content: str) -> dict:
     """
     Parse the HTML content and extract relevant data.
     This function looks for specific tags (h2, h4, table) and extracts their text.
@@ -30,7 +31,7 @@ def parse_html(html_content):
                 data[current_header]['table'] = parse_table(tag)
     return data
 
-def parse_table(table):
+def parse_table(table : 'bs4.element.Tag') -> dict:
     """
     Parse a table element and extract tax rates and ranges.
     Args:
@@ -51,7 +52,7 @@ def parse_table(table):
             data[key] = value
     return data
 
-def parse_irs_data(html_content):
+def parse_irs_data(html_content: str) -> dict:
     """
     Parse the IRS data from the provided HTML content.
     Args:
