@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
 
-from scraper.fetch import fetch_irs_data
 
 def parse_html(html_content):
     """
