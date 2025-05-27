@@ -4,7 +4,10 @@ from scraper.fetch import fetch_irs_data
 
 def parse_html(html_content):
     """
-    Parse the HTML content and locate and extract <table> elements.
+    Parse the HTML content and extract relevant data.
+    This function looks for specific tags (h2, h4, table) and extracts their text.
+    It organizes the data into a dictionary where headers are keys and their corresponding
+    table data is stored as values.
 
     Args:
         html_content (str): The HTML content to parse.
@@ -51,12 +54,14 @@ def parse_table(table):
 
 def parse_irs_data(html_content):
     """
-    Parse the IRS data from the scraper module and extract structured data for each filing status.
-
+    Parse the IRS data from the provided HTML content.
     Args:
         html_content (str): The HTML content to parse.
-
     Returns:
-        dict: A dictionary containing structured data for each filing status.
+        dict: A dictionary containing structured IRS tax bracket data.
     """
-    return parse_html(html_content)
+    
+    raw_tax_bracket = parse_html(html_content)
+    
+    irs_tax_bracket = {k: v for k, v in raw_tax_bracket.items() if v and any(v.values())}
+    return irs_tax_bracket
