@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import bs4
-
+import pandas as pd
 
 def parse_html(html_content: str) -> dict:
     """
@@ -65,3 +65,22 @@ def parse_irs_data(html_content: str) -> dict:
     
     irs_tax_bracket = {k: v for k, v in raw_tax_bracket.items() if v and any(v.values())}
     return irs_tax_bracket
+
+def parse_irs_data_to_dataframe(irs_data: dict) -> pd.DataFrame:
+    """
+    Convert the parsed IRS data dictionary into a pandas DataFrame.
+    
+    Args:
+        irs_data (dict): The parsed IRS data dictionary.
+        
+    Returns:
+        pd.DataFrame: A DataFrame containing the structured IRS tax bracket data.
+    """
+    # Flatten the dictionary and convert it to a DataFrame
+    rows = []
+    for header, content in irs_data.items():
+        if 'table' in content:
+            for key, value in content['table'].items():
+                rows.append({'Header': header, 'Rate': key, 'Range': value})
+    
+    return pd.DataFrame(rows)
