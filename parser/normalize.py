@@ -51,8 +51,6 @@ def normalize_scraped_data(scraped_data: pd.DataFrame) -> pd.DataFrame:
         normalized_rows.append(row)
     
     normalized_data = pd.DataFrame(normalized_rows)
-    
-    print(f"Normalized DataFrame:\n{normalized_data}")
     return normalized_data
 
 
