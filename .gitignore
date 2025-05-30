@@ -3,8 +3,10 @@ env/
 /.env
 __pycache__/
 
-#ignore vscode files
+#ide
 .vscode/
+.idea/
+.DS_Store
 
 # Data
 data/raw/
