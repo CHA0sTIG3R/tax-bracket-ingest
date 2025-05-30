@@ -3,7 +3,8 @@ env/
 /.env
 __pycache__/
 
-#ide
+# OS / Editor
+*.swp
 .vscode/
 .idea/
 .DS_Store
