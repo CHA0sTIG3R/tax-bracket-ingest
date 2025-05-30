@@ -1,8 +1,12 @@
+# Python
 env/
 /.env
-
-# Ignore Python cache files
 __pycache__/
 
 #ignore vscode files
 .vscode/
+
+# Data
+data/raw/
+data/downloads/
+*.xlsx
