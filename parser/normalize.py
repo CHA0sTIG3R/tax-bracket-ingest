@@ -1,58 +1,53 @@
 from datetime import datetime
 import pandas as pd
 
-def normalize_scraped_data(scraped_data: pd.DataFrame) -> pd.DataFrame:
-    """Normalize the scraped data into the desired format. 
-    <p>
-    The format: 
-    <pre>
-    "Year","Married Filing Jointly (Rates/Brackets)","","","Married Filing Separately (Rates/Brackets)","","","Single Filer (Rates/Brackets)","","","Head of Household (Rates/Brackets)","","","Notes:"
-    </pre>
-    <p>
-    Example:
-    <code>
-        "2021","10.0%",">","$0","10.0%",">","$0","10.0%",">","$0","10.0%",">","$0","Last law to change rates was the Tax Cuts and Jobs Act of 2017."
-    </code>
-
+def process_irs_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """Process the IRS DataFrame to normalize and structure it.
+    
     Args:
-        scraped_data (pd.DataFrame): The raw scraped data containing tax brackets and rates.
-
+        df (pd.DataFrame): The DataFrame containing IRS tax data.
+    
     Returns:
-        pd.DataFrame: A DataFrame with normalized columns and rows, ready for further processing or analysis.
-    """  
-    normalized_rows = []
+        pd.DataFrame: A normalized DataFrame with structured tax rates and brackets.
+    """
+    
+    status_rates = {
+        "Married Filing Jointly (Rates/Brackets)": (9, 16),
+        "Married Filing Separately (Rates/Brackets)": (17, 24),
+        "Single Filer (Rates/Brackets)": (1, 8),
+        "Head of Household (Rates/Brackets)": (25, 32)
+    }
     
     year = datetime.now().year
-    single = scraped_data.iloc[1:8, 1:4].to_dict(orient='records')
-    married_jointly = scraped_data.iloc[9:16, 1:4].to_dict(orient='records')
-    married_separately = scraped_data.iloc[17:24, 1:4].to_dict(orient='records')
-    head_of_household = scraped_data.iloc[25:32, 1:4].to_dict(orient='records')
-    notes = ""
+    greater_than = '>'
+    rows = []
     
-    for i in range(len(single)):
+    for status, (start, end) in status_rates.items():
         
-        row = {
-            "Year": year,
-            "Married Filing Jointly (Rates/Brackets)": f"{married_jointly[i]['Rate']}",
-            "": ">",
-            " ": f"{married_jointly[i]['Range']}",
-            "Married Filing Separately (Rates/Brackets)": f"{married_separately[i]['Rate']}",
-            "  ": ">",  
-            "   ": f"{married_separately[i]['Range']}", 
-            "Single Filer (Rates/Brackets)": f"{single[i]['Rate']}",
-            "    ": ">",  
-            "     ": f"{single[i]['Range']}", 
-            "Head of Household (Rates/Brackets)": f"{head_of_household[i]['Rate']}",
-            "      ": ">",  
-            "       ": f"{head_of_household[i]['Range']}", 
-            "Notes:": notes
-        }
+        sub_row = df.iloc[start:end, 1:4].copy()
         
-        normalized_rows.append(row)
-    
-    normalized_data = pd.DataFrame(normalized_rows)
-    return normalized_data
+        sub_row.insert(0, 'Year', year)
+        sub_row.insert(2, 'For Income >', greater_than)
+        
+        sub_row.rename(
+            columns={
+                sub_row.columns[1]: status, 
+                sub_row.columns[3]: 'Range Start'
+            },
+            inplace=True
+        )
+        
+        rows.append(sub_row.reset_index(drop=True))
 
+    # Merge all into one dataframe
+    merged_df = pd.concat(rows, axis=1)
+
+    # Drop duplicate 'Year' columns, keep only the first
+    year_cols = [col for col in merged_df.columns if col == 'Year']
+    if len(year_cols) > 1:
+        merged_df = merged_df.drop(columns=year_cols[1:])
+
+    return merged_df
 
 def dataframe_to_csv(df: pd.DataFrame, filename: str) -> None:
     """Save the DataFrame to a CSV file.
