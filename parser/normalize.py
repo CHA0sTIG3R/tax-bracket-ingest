@@ -43,11 +43,33 @@ def process_irs_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     merged_df = pd.concat(rows, axis=1)
 
     # Drop duplicate 'Year' columns, keep only the first
-    year_cols = [col for col in merged_df.columns if col == 'Year']
-    if len(year_cols) > 1:
-        merged_df = merged_df.drop(columns=year_cols[1:])
+    merged_df = drop_one_duplicate(merged_df, 'Year')
 
     return merged_df
+
+def drop_one_duplicate(df: pd.DataFrame, duplicate_col: str) -> pd.DataFrame:
+    """Drop all but one occurrence of a specified duplicate column in a DataFrame.
+    Args:
+        df (pd.DataFrame): The DataFrame to process.
+        duplicate_col (str): The name of the column to check for duplicates.
+    Returns:
+        pd.DataFrame: The DataFrame with duplicates removed, keeping only the first occurrence.
+    """
+    cols = df.columns.tolist()
+    seen = {}
+    new_cols = []
+    for col in cols:
+        if col == duplicate_col:
+            count = seen.get(col, 0)
+            if count == 0:
+                new_cols.append(True)
+            else:
+                new_cols.append(False)
+            seen[col] = count + 1
+        else:
+            new_cols.append(True)
+    df = df.loc[:, new_cols]
+    return df
 
 def dataframe_to_csv(df: pd.DataFrame, filename: str) -> None:
     """Save the DataFrame to a CSV file.
