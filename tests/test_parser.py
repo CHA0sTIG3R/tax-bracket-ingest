@@ -1,7 +1,6 @@
 import pytest
 from tax_bracket_ingest.parser.parser import parse_html, parse_table, parse_irs_data, parse_irs_data_to_dataframe
 import pandas as pd
-from bs4 import BeautifulSoup
 
 def test_parse_html():
     """
