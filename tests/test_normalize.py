@@ -1,5 +1,9 @@
 import pytest
-from tax_bracket_ingest.parser.normalize import process_irs_dataframe, drop_one_duplicate, dataframe_to_csv
+from tax_bracket_ingest.parser.normalize import (
+    process_irs_dataframe, 
+    drop_one_duplicate, 
+    dataframe_to_csv
+)
 import pandas as pd
 from datetime import datetime
 
