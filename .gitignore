@@ -2,6 +2,10 @@
 env/
 /.env
 __pycache__/
+*.egg
+*.egg-info/
+*.pyc
+*.pyo
 
 # OS / Editor
 *.swp
