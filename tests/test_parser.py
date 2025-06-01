@@ -1,55 +1,16 @@
 import pytest
-from tax_bracket_ingest.parser.parser import parse_html, parse_table, parse_irs_data, parse_irs_data_to_dataframe
+from tax_bracket_ingest.parser.parser import (
+    parse_html, 
+    parse_table, 
+    parse_irs_data, 
+    parse_irs_data_to_dataframe
+)
 import pandas as pd
+from bs4 import BeautifulSoup
 
-def test_parse_html():
-    """
-    Test the parse_html function to ensure it correctly parses HTML content.
-    """
-    html_content = """
-    <html>
-        <body>
-            <h2>Test Header</h2>
-            <table>
-                <tr><th>Income Range</th><td>$0 - $10,000</td></tr>
-                <tr><th>Tax Rate</th><td>10%</td></tr>
-            </table>
-        </body>
-    </html>
-    """
-    result = parse_html(html_content)
-    assert isinstance(result, dict), "Result should be a dictionary."
-    assert "Test Header" in result, "Header 'Test Header' should be present."
-    assert "Income Range" in result["Test Header"]['table'], "Table should contain 'Income Range'."
-    assert "Tax Rate" in result["Test Header"]['table'], "Table should contain 'Tax Rate'."
-    
-
-def test_parse_table():
-    """
-    Test the parse_table function to ensure it correctly parses a table element.
-    """
-    table_html = """
-    <table>
-        <tr><th>Income Range</th><td>$0 - $10,000</td></tr>
-        <tr><th>Tax Rate</th><td>10%</td></tr>
-    </table>
-    """
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(table_html, 'html.parser')
-    table = soup.find('table')
-    
-    result = parse_table(table)
-    assert isinstance(result, dict), "Result should be a dictionary."
-    assert "Income Range" in result, "Table should contain 'Income Range'."
-    assert "Tax Rate" in result, "Table should contain 'Tax Rate'."
-    assert result["Income Range"] == "$0 - $10,000", "Income Range should match."
-    assert result["Tax Rate"] == "10%", "Tax Rate should match."
-    
-def test_parse_irs_data():
-    """
-    Test the parse_irs_data function to ensure it correctly parses IRS data.
-    """
-    html_content = """
+@pytest.fixture
+def sample_html():
+    return """
     <html>
         <body>
             <h2>Married Filing Jointly</h2>
@@ -65,18 +26,44 @@ def test_parse_irs_data():
         </body>
     </html>
     """
-    result = parse_irs_data(html_content)
-    assert isinstance(result, dict), "Result should be a dictionary."
-    assert "Married Filing Jointly" in result, "Should contain 'Married Filing Jointly'."
-    assert "Single" in result, "Should contain 'Single'."
-    assert "Income Range" in result["Married Filing Jointly"]['table'], "Table should contain 'Income Range'."
-    assert "Tax Rate" in result["Single"]['table'], "Table should contain 'Tax Rate'."
+
+@pytest.fixture
+def sample_table_html():
+    return """
+    <table>
+        <tr><th>Income Range</th><td>$0 - $10,000</td></tr>
+        <tr><th>Tax Rate</th><td>10%</td></tr>
+    </table>
+    """
+
+def test_parse_html(sample_html):
+    result = parse_html(sample_html)
+    assert isinstance(result, dict)
+    assert "Married Filing Jointly" in result
+    assert 'table' in result["Married Filing Jointly"]
+    assert isinstance(result["Married Filing Jointly"]['table'], dict)
+
+def test_parse_table(sample_table_html):
+    soup = BeautifulSoup(sample_table_html, 'html.parser')
+    table = soup.find('table')
     
-def test_parse_irs_data_to_dataframe():
-    """
-    Test the parse_irs_data_to_dataframe function to ensure it converts IRS data to a DataFrame.
-    """
-    irs_data = {
+    result = parse_table(table)
+    assert isinstance(result, dict)
+    assert result.get("Income Range") == "$0 - $10,000"
+    assert result.get("Tax Rate") == "10%"
+
+def test_parse_irs_data(sample_html):
+    result = parse_irs_data(sample_html)
+    assert isinstance(result, dict)
+    assert "Married Filing Jointly" in result
+    assert "Single" in result
+    for filing_status in result:
+        assert isinstance(result[filing_status]['table'], dict)
+        assert "Income Range" in result[filing_status]['table']
+
+@pytest.fixture
+def sample_irs_data():
+    return {
         "Married Filing Jointly": {
             "table": {
                 "Income Range": "$0 - $10,000",
@@ -90,14 +77,17 @@ def test_parse_irs_data_to_dataframe():
             }
         }
     }
-    
-    df = parse_irs_data_to_dataframe(irs_data)
-    assert isinstance(df, pd.DataFrame), "Result should be a DataFrame."
-    assert not df.empty, "DataFrame should not be empty."
-    assert 'Header' in df.columns, "DataFrame should contain 'Header' column."
-    assert 'Rate' in df.columns, "DataFrame should contain 'Rate' column."
-    assert 'Range' in df.columns, "DataFrame should contain 'Range' column."
-    assert len(df) == 4, "DataFrame should have 4 rows for the two headers and their corresponding rates and ranges."
+
+def test_parse_irs_data_to_dataframe(sample_irs_data):
+    df = parse_irs_data_to_dataframe(sample_irs_data)
+    assert isinstance(df, pd.DataFrame)
+    assert not df.empty
+    assert 'Header' in df.columns
+    assert 'Rate' in df.columns
+    assert 'Range' in df.columns
+    # Parameterize expected row counts if needed
+    expected_rows = 4  # Two filing statuses with two rows each
+    assert len(df) == expected_rows
 
 if __name__ == "__main__":
-    pytest.main([__file__])  
+    pytest.main()
