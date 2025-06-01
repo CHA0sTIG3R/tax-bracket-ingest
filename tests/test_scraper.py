@@ -35,3 +35,5 @@ def test_fetch_irs_data_content():
     assert "Head of household" in content, "Fetched content should contain 'Head of Household'."
     assert "Married filing separately" in content, "Fetched content should contain 'Married Filing Separately'."
 
+if __name__ == "__main__":
+    pytest.main([__file__]) 
