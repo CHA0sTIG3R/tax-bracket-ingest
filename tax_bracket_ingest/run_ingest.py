@@ -21,12 +21,12 @@ def upload_to_s3(local_path: Path, s3_key: str):
     
 def main():
     html = fetch_irs_data()
-    year = datetime.now().year
-    
     
     raw_struct = parse_irs_data(html)
     raw_df = parse_irs_data_to_dataframe(raw_struct)
     wide_df = process_irs_dataframe(raw_df)
+    
+    year = wide_df['Year'][0]
     
     print(wide_df)
     
@@ -35,7 +35,7 @@ def main():
         out = Path(td) / fn
         dataframe_to_csv(wide_df, str(out))
         print(out, fn)
-        upload_to_s3(out, f"{S3_PREFIX}{fn}")
+        # upload_to_s3(out, f"{S3_PREFIX}{fn}")
 
 if __name__ == "__main__":
     main()

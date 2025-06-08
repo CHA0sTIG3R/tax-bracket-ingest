@@ -19,7 +19,7 @@ def process_irs_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         "Head of Household (Rates/Brackets)": (25, 32, 'HOH Range Start')
     }
     
-    year = datetime.now().year
+    year = int(df['Header'][0].split(' ')[0])
     rows = []
     
     for status, (start, end, name) in status_rates.items():
