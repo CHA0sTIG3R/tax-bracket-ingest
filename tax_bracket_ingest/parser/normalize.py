@@ -26,11 +26,7 @@ def process_irs_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         
         sub_row = df.iloc[start:end, 1:4].copy()
         
-        print(sub_row)
-        
         sub_row.insert(0, 'Year', year)
-        
-        print(sub_row)
         
         sub_row.rename(
             columns={
@@ -39,8 +35,6 @@ def process_irs_dataframe(df: pd.DataFrame) -> pd.DataFrame:
             },
             inplace=True
         )
-        
-        print(sub_row)
         
         rows.append(sub_row.reset_index(drop=True))
 
