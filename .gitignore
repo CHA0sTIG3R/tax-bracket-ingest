@@ -13,7 +13,5 @@ __pycache__/
 .idea/
 .DS_Store
 
-# Data
-data/raw/
-data/downloads/
-*.xlsx
+/jupyter_notes
+.ipynb

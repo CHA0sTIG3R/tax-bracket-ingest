@@ -9,7 +9,6 @@ from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_d
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
 
 load_dotenv()
-DATA_PATH = os.getenv("DATA_PATH")
 S3_BUCKET = os.getenv("S3_BUCKET")
 S3_PREFIX = os.getenv("S3_PREFIX")
 S3_KEY = os.getenv("S3_KEY")
