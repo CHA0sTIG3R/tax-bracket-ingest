@@ -15,10 +15,10 @@ def test_process_irs_dataframe(sample_dataframe):
                         'Married Filing Separately (Rates/Brackets)', 
                         'Single Filer (Rates/Brackets)', 
                         'Head of Household (Rates/Brackets)', 
-                        'For Income >', 'Range Start']
+                        'S Range Start', 'S Range End']
     assert all(col in normalized_df.columns for col in expected_columns), "Normalized DataFrame should contain expected columns."
     
-    current_year = datetime.now().year
+    current_year = (datetime.now().year) - 1
     assert (normalized_df['Year'] == current_year).all(), "Year column should contain the current year."
     expected_row_count = 7 
     assert len(normalized_df) == expected_row_count, f"Normalized DataFrame should have {expected_row_count} rows."

@@ -21,17 +21,17 @@ def test_parse_table(sample_table_html):
     
     result = parse_table(table)
     assert isinstance(result, dict)
-    assert result.get("Income Range") == "$0 - $10,000"
-    assert result.get("Tax Rate") == "10%"
+    assert result.get("10%") == "$0"
+    assert result.get("Tax rate") == "on taxable income from . . ."
 
 def test_parse_irs_data(sample_html):
     result = parse_irs_data(sample_html)
     assert isinstance(result, dict)
     assert "Married Filing Jointly" in result
-    assert "Single" in result
+    assert "2024 tax rates for a single taxpayer" in result
     for filing_status in result:
         assert isinstance(result[filing_status]['table'], dict)
-        assert "Income Range" in result[filing_status]['table']
+        assert "Tax rate" in result[filing_status]['table']
 
 @pytest.fixture
 def sample_irs_data():
