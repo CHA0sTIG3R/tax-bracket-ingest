@@ -28,13 +28,15 @@ def write_df_to_s3(df: pd.DataFrame, key: str):
 def main():
     html = fetch_irs_data()
     
-    raw_struct = parse_irs_data(html)
+    raw_struct = parse_irs_data(html.decode('utf-8'))
     raw_df = parse_irs_data_to_dataframe(raw_struct)
     curr_df = process_irs_dataframe(raw_df)
     
     prev_hist = read_csv_from_s3(S3_KEY)
     
     hist_df = pd.concat([curr_df, prev_hist], ignore_index=True)
+    
+    #TODO: check for duplicated years in case and tax rates in case of running scraper too early or IRS not being updated on time
     
     write_df_to_s3(hist_df, S3_KEY)
     
