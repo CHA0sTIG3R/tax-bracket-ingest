@@ -1,56 +1,10 @@
 import pytest
 from tax_bracket_ingest.parser.normalize import (
     process_irs_dataframe, 
-    drop_one_duplicate, 
-    dataframe_to_csv
+    drop_one_duplicate
 )
 import pandas as pd
 from datetime import datetime
-
-@pytest.fixture
-def sample_dataframe():
-    """Create a sample DataFrame to test the normalization process."""
-    data = {
-        'Header': [
-            
-            '2024 tax rates for a single taxpayer', '2024 tax rates for a single taxpayer',
-            '2024 tax rates for a single taxpayer', '2024 tax rates for a single taxpayer',
-            '2024 tax rates for a single taxpayer', '2024 tax rates for a single taxpayer',
-            '2024 tax rates for a single taxpayer', '2024 tax rates for a single taxpayer',
-            'Married filing jointly or qualifying surviving spouse',
-            'Married filing jointly or qualifying surviving spouse',
-            'Married filing jointly or qualifying surviving spouse',
-            'Married filing jointly or qualifying surviving spouse',
-            'Married filing jointly or qualifying surviving spouse',
-            'Married filing jointly or qualifying surviving spouse',
-            'Married filing jointly or qualifying surviving spouse',
-            'Married filing jointly or qualifying surviving spouse',
-            'Married filing separately', 'Married filing separately',
-            'Married filing separately', 'Married filing separately',
-            'Married filing separately', 'Married filing separately',
-            'Married filing separately', 'Married filing separately',
-            'Head of household', 'Head of household', 'Head of household',
-            'Head of household', 'Head of household', 'Head of household',
-            'Head of household', 'Head of household'
-        ],
-            'Rate': [
-            'Tax rate', '10%', '12%', '22%', '24%', '32%', '35%', '37%',
-            'Tax rate', '10%', '12%', '22%', '24%', '32%', '35%', '37%',
-            'Tax rate', '10%', '12%', '22%', '24%', '32%', '35%', '37%',
-            'Tax rate', '10%', '12%', '22%', '24%', '32%', '35%', '37%'
-        ],
-        'Range': [
-            'on taxable income from . . .', '$0', '$11,601', '$47,151', '$100,526',
-            '$191,951', '$243,726', '$609,351', 'on taxable income from . . .',
-            '$0', '$23,201', '$94,301', '$201,051', '$383,901', '$487,451',
-            '$731,201', 'on taxable income from . . .', '$0', '$11,601',
-            '$47,151', '$100,526', '$191,951', '$243,726', '$365,601',
-            'on taxable income from . . .', '$0', '$16,551', '$63,101',
-            '$100,501', '$191,951', '$243,701', '$609,351'
-        ]
-    }
-    
-    return pd.DataFrame(data)
 
 def test_process_irs_dataframe(sample_dataframe):
     """Test the process_irs_dataframe function to ensure it normalizes the DataFrame correctly."""
@@ -84,23 +38,6 @@ def test_drop_one_duplicate(sample_dataframe):
     len_after = len(cleaned_df.columns)  
     assert len_after == len_before - 2, "One duplicate 'Header' column should be removed."
     assert cleaned_df.columns.tolist().count('Header') == 1, "There should be only one 'Header' column in the cleaned DataFrame."
-    
-def test_dataframe_to_csv(sample_dataframe, tmp_path):
-    """Test the dataframe_to_csv function to ensure it saves the DataFrame to a CSV file correctly."""
-    # Define a temporary file path
-    temp_file = tmp_path / "test_output.csv"
-    
-    # Call the function to save the DataFrame to CSV
-    dataframe_to_csv(sample_dataframe, temp_file)
-    
-    # Check if the file was created
-    assert temp_file.exists(), "CSV file should be created."
-    
-    # Read the CSV file back into a DataFrame
-    loaded_df = pd.read_csv(temp_file)
-    
-    # Check if the loaded DataFrame matches the original sample DataFrame
-    pd.testing.assert_frame_equal(loaded_df, sample_dataframe, check_dtype=True, check_like=True)
     
 
 if __name__ == "__main__":

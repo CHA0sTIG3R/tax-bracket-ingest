@@ -8,34 +8,6 @@ from tax_bracket_ingest.parser.parser import (
 import pandas as pd
 from bs4 import BeautifulSoup
 
-@pytest.fixture
-def sample_html():
-    return """
-    <html>
-        <body>
-            <h2>Married Filing Jointly</h2>
-            <table>
-                <tr><th>Income Range</th><td>$0 - $10,000</td></tr>
-                <tr><th>Tax Rate</th><td>10%</td></tr>
-            </table>
-            <h2>Single</h2>
-            <table>
-                <tr><th>Income Range</th><td>$0 - $5,000</td></tr>
-                <tr><th>Tax Rate</th><td>12%</td></tr>
-            </table>
-        </body>
-    </html>
-    """
-
-@pytest.fixture
-def sample_table_html():
-    return """
-    <table>
-        <tr><th>Income Range</th><td>$0 - $10,000</td></tr>
-        <tr><th>Tax Rate</th><td>10%</td></tr>
-    </table>
-    """
-
 def test_parse_html(sample_html):
     result = parse_html(sample_html)
     assert isinstance(result, dict)
