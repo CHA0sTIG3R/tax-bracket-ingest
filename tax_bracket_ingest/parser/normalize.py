@@ -97,15 +97,5 @@ def drop_one_duplicate(df: pd.DataFrame, duplicate_col: str) -> pd.DataFrame:
             new_cols.append(True)
     df = df.loc[:, new_cols]
     return df
-
-def dataframe_to_csv(df: pd.DataFrame, filename: str) -> None:
-    """Save the DataFrame to a CSV file.
-    
-    Args:
-        df (pd.DataFrame): The DataFrame to save.
-        filename (str): The name of the file to save the DataFrame to.
-    """
-    df.to_csv(filename, index=False)
-    print(f"Data saved to {filename}")
     
    
