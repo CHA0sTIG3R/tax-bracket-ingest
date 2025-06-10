@@ -1,8 +1,13 @@
+import os
 from pathlib import Path
+import dotenv
 from moto import mock_aws
 import pytest
 import pandas as pd
 import boto3
+
+from tax_bracket_ingest import run_ingest
+import tax_bracket_ingest.scraper.fetch as fetch_mod
 
 TEST_DATA = Path(__file__).parent / "data"
 
@@ -13,12 +18,12 @@ def test_data_dir():
 
 @pytest.fixture
 def sample_page_html(test_data_dir):
-    return (test_data_dir / "sample_page.html").read_text(encoding='utf-8')
+    return (test_data_dir / "sample_page.html").read_bytes()
     
 @pytest.fixture
 def sample_table_html(sample_page_html):
     from bs4 import BeautifulSoup
-    soup = BeautifulSoup(sample_page_html, 'html.parser')
+    soup = BeautifulSoup(sample_page_html.decode('utf-8'), 'html.parser')
     table = soup.find('table')
     return str(table) if table else None
 
@@ -31,24 +36,26 @@ def sample_normalized_df(test_data_dir):
     return pd.read_csv(test_data_dir / "sample_normalized.csv")
 
 @pytest.fixture
+def sample_normalized_csv_bytes(test_data_dir):
+    return (test_data_dir / "sample_normalized.csv").read_bytes()
+
+@pytest.fixture(autouse=True)
+def stub_out_fetch(monkeypatch, sample_page_html):
+    monkeypatch.setattr(fetch_mod, "fetch", lambda url: sample_page_html)
+    monkeypatch.setattr(run_ingest, "fetch_irs_data", lambda: sample_page_html)
+
+@pytest.fixture
 def moto_s3_client():
     with mock_aws():
         s3 = boto3.client("s3", region_name="us-east-1")
         yield s3
-        # Cleanup after test
-        for bucket in s3.list_buckets()["Buckets"]:
-            s3.delete_bucket(Bucket=bucket["Name"])
-
-@pytest.fixture
-def s3_bucket(moto_s3_client):
-    with mock_aws():
-        bucket_name = "test-bucket"
-        moto_s3_client.create_bucket(Bucket=bucket_name)
-        yield bucket_name
-        # Cleanup after test
-        moto_s3_client.delete_bucket(Bucket=bucket_name)
 
 @pytest.fixture(autouse=True)
-def env_vars(monkeypatch, s3_bucket):
-    monkeypatch.setenv("S3_BUCKET", s3_bucket)
+def aws_credentials_env(monkeypatch):
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
+    monkeypatch.setenv("AWS_SECURITY_TOKEN", "testing")
+    monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
+    monkeypatch.setenv("S3_BUCKET", "test-bucket")
     monkeypatch.setenv("S3_KEY", "history.csv")
+    yield
