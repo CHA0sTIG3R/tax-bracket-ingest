@@ -1,0 +1,33 @@
+Header,Rate,Range
+2024 tax rates for a single taxpayer,Tax rate,on taxable income from . . .
+2024 tax rates for a single taxpayer,10%,$0
+2024 tax rates for a single taxpayer,12%,"$11,601"
+2024 tax rates for a single taxpayer,22%,"$47,151"
+2024 tax rates for a single taxpayer,24%,"$100,526"
+2024 tax rates for a single taxpayer,32%,"$191,951"
+2024 tax rates for a single taxpayer,35%,"$243,726"
+2024 tax rates for a single taxpayer,37%,"$609,351"
+Married filing jointly or qualifying surviving spouse,Tax rate,on taxable income from . . .
+Married filing jointly or qualifying surviving spouse,10%,$0
+Married filing jointly or qualifying surviving spouse,12%,"$23,201"
+Married filing jointly or qualifying surviving spouse,22%,"$94,301"
+Married filing jointly or qualifying surviving spouse,24%,"$201,051"
+Married filing jointly or qualifying surviving spouse,32%,"$383,901"
+Married filing jointly or qualifying surviving spouse,35%,"$487,451"
+Married filing jointly or qualifying surviving spouse,37%,"$731,201"
+Married filing separately,Tax rate,on taxable income from . . .
+Married filing separately,10%,$0
+Married filing separately,12%,"$11,601"
+Married filing separately,22%,"$47,151"
+Married filing separately,24%,"$100,526"
+Married filing separately,32%,"$191,951"
+Married filing separately,35%,"$243,726"
+Married filing separately,37%,"$365,601"
+Head of household,Tax rate,on taxable income from . . .
+Head of household,10%,$0
+Head of household,12%,"$16,551"
+Head of household,22%,"$63,101"
+Head of household,24%,"$100,501"
+Head of household,32%,"$191,951"
+Head of household,35%,"$243,701"
+Head of household,37%,"$609,351"
