@@ -11,9 +11,9 @@ from bs4 import BeautifulSoup
 def test_parse_html(sample_page_html):
     result = parse_html(sample_page_html)
     assert isinstance(result, dict)
-    assert "Married Filing Jointly" in result
-    assert 'table' in result["Married Filing Jointly"]
-    assert isinstance(result["Married Filing Jointly"]['table'], dict)
+    assert "Married filing jointly" in result
+    assert 'table' in result["Married filing jointly"]
+    assert isinstance(result["Married filing jointly"]['table'], dict)
 
 def test_parse_table(sample_table_html):
     soup = BeautifulSoup(sample_table_html, 'html.parser')
@@ -27,7 +27,7 @@ def test_parse_table(sample_table_html):
 def test_parse_irs_data(sample_page_html):
     result = parse_irs_data(sample_page_html)
     assert isinstance(result, dict)
-    assert "Married Filing Jointly" in result
+    assert "Married filing jointly" in result
     assert "2024 tax rates for a single taxpayer" in result
     for filing_status in result:
         assert isinstance(result[filing_status]['table'], dict)
@@ -36,7 +36,7 @@ def test_parse_irs_data(sample_page_html):
 @pytest.fixture
 def sample_irs_data():
     return {
-        "Married Filing Jointly": {
+        "Married filing jointly": {
             "table": {
                 "Income Range": "$0 - $10,000",
                 "Tax Rate": "10%"
