@@ -8,14 +8,17 @@ from tax_bracket_ingest.scraper.fetch import fetch_irs_data
 from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_dataframe
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
 
-load_dotenv()
-S3_BUCKET = os.getenv("S3_BUCKET")
-S3_PREFIX = os.getenv("S3_PREFIX")
-S3_KEY = os.getenv("S3_KEY")
+def load_env_vars():
+    load_dotenv()
+    
+    s3_bucket = os.getenv("S3_BUCKET")
+    s3_key = os.getenv("S3_KEY")
+    
+    return s3_bucket, s3_key
     
 def read_csv_from_s3(key: str) -> pd.DataFrame:
     s3 = boto3.client("s3")
-    resp = s3.get_object(Bucket=S3_BUCKET, Key=key)
+    resp = s3.get_object(Bucket=load_env_vars()[0], Key=key)
     return pd.read_csv(BytesIO(resp["Body"].read()))
 
 def write_df_to_s3(df: pd.DataFrame, key: str):
@@ -23,7 +26,7 @@ def write_df_to_s3(df: pd.DataFrame, key: str):
     buf = BytesIO()
     df.to_csv(buf, index=False)
     buf.seek(0)
-    s3.put_object(Bucket=S3_BUCKET, Key=key, Body=buf.getvalue())
+    s3.put_object(Bucket=load_env_vars()[0], Key=key, Body=buf.getvalue())
     
 def main():
     html = fetch_irs_data()
@@ -32,15 +35,17 @@ def main():
     raw_df = parse_irs_data_to_dataframe(raw_struct)
     curr_df = process_irs_dataframe(raw_df)
     
-    prev_hist = read_csv_from_s3(S3_KEY)
+    s3_bucket, s3_key = load_env_vars()
+    
+    prev_hist = read_csv_from_s3(s3_key)
     
     hist_df = pd.concat([curr_df, prev_hist], ignore_index=True)
     
     #TODO: check for duplicated years in case and tax rates in case of running scraper too early or IRS not being updated on time
     
-    write_df_to_s3(hist_df, S3_KEY)
+    write_df_to_s3(hist_df, s3_key)
     
-    print(f"Historical CSV at s3://{S3_BUCKET}/{S3_KEY} updated")
+    print(f"Historical CSV at s3://{s3_bucket}/{s3_key} updated")
 
 if __name__ == "__main__":
     main()
