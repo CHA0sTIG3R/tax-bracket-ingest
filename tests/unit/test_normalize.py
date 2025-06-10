@@ -6,9 +6,9 @@ from tax_bracket_ingest.parser.normalize import (
 import pandas as pd
 from datetime import datetime
 
-def test_process_irs_dataframe(sample_dataframe):
+def test_process_irs_dataframe(sample_raw_csv):
     """Test the process_irs_dataframe function to ensure it normalizes the DataFrame correctly."""
-    normalized_df = process_irs_dataframe(sample_dataframe)
+    normalized_df = process_irs_dataframe(sample_raw_csv)
     
     # Check if the DataFrame has the expected columns
     expected_columns = ['Year', 'Married Filing Jointly (Rates/Brackets)', 
@@ -23,11 +23,11 @@ def test_process_irs_dataframe(sample_dataframe):
     expected_row_count = 7 
     assert len(normalized_df) == expected_row_count, f"Normalized DataFrame should have {expected_row_count} rows."
     
-def test_drop_one_duplicate(sample_dataframe):
+def test_drop_one_duplicate(sample_raw_csv):
     """Test the drop_one_duplicate function to ensure it removes column name duplicates correctly."""
-    df_copy_1 = sample_dataframe.copy()
-    df_copy_2 = sample_dataframe.copy()
-    df_copy_3 = sample_dataframe.copy()
+    df_copy_1 = sample_raw_csv.copy()
+    df_copy_2 = sample_raw_csv.copy()
+    df_copy_3 = sample_raw_csv.copy()
     df_with_duplicates = pd.concat([df_copy_1, df_copy_2, df_copy_3], axis=1)
     
     assert df_with_duplicates.columns.tolist().count('Header') > 1, "There should be multiple 'Header' columns before dropping duplicates."

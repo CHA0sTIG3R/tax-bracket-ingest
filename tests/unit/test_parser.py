@@ -8,8 +8,8 @@ from tax_bracket_ingest.parser.parser import (
 import pandas as pd
 from bs4 import BeautifulSoup
 
-def test_parse_html(sample_html):
-    result = parse_html(sample_html)
+def test_parse_html(sample_page_html):
+    result = parse_html(sample_page_html)
     assert isinstance(result, dict)
     assert "Married Filing Jointly" in result
     assert 'table' in result["Married Filing Jointly"]
@@ -24,8 +24,8 @@ def test_parse_table(sample_table_html):
     assert result.get("10%") == "$0"
     assert result.get("Tax rate") == "on taxable income from . . ."
 
-def test_parse_irs_data(sample_html):
-    result = parse_irs_data(sample_html)
+def test_parse_irs_data(sample_page_html):
+    result = parse_irs_data(sample_page_html)
     assert isinstance(result, dict)
     assert "Married Filing Jointly" in result
     assert "2024 tax rates for a single taxpayer" in result
