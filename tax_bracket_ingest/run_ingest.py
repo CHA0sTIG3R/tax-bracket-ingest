@@ -39,9 +39,16 @@ def main():
     
     prev_hist = read_csv_from_s3(s3_key)
     
-    hist_df = pd.concat([curr_df, prev_hist], ignore_index=True)
-    
-    #TODO: check for duplicated years in case and tax rates in case of running scraper too early or IRS not being updated on time
+    first_year = prev_hist.iloc[0]["Year"]
+    recent_year_rows = prev_hist[prev_hist["Year"] == first_year]
+
+    # Compare and append only if new
+    if not curr_df.equals(recent_year_rows):
+        hist_df = pd.concat([curr_df, prev_hist], ignore_index=True)
+        print(f"Year {first_year} in historical is different from scraped — appending.")
+    else:
+        hist_df = prev_hist
+        print(f"Year {first_year} already exists and is identical — skipping append.")
     
     write_df_to_s3(hist_df, s3_key)
     
