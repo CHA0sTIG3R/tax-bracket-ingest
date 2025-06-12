@@ -4,6 +4,7 @@ import boto3
 from dotenv import load_dotenv
 
 import pandas as pd
+import requests
 from tax_bracket_ingest.scraper.fetch import fetch_irs_data
 from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_dataframe
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
@@ -28,6 +29,18 @@ def write_df_to_s3(df: pd.DataFrame, key: str):
     buf.seek(0)
     s3.put_object(Bucket=load_env_vars()[0], Key=key, Body=buf.getvalue())
     
+def push_csv_to_backend(df: pd.DataFrame):
+    csv_bytes = df.to_csv(index=False).encode('utf-8')
+    url = os.getenv("BACKEND_URL") + "/api/tax-brackets/upload"
+    resp = requests.post(
+        url,
+        headers={"Content-Type": "text/csv"},
+        data=csv_bytes,
+        timeout=30
+    )
+    resp.raise_for_status()
+    
+    
 def main():
     html = fetch_irs_data()
     
@@ -50,6 +63,10 @@ def main():
         hist_df = prev_hist
         print(f"Year {first_year} already exists and is identical — skipping append.")
     
+    # Push to backend
+    push_csv_to_backend(hist_df)
+    
+    # update S3
     write_df_to_s3(hist_df, s3_key)
     
     print(f"Historical CSV at s3://{s3_bucket}/{s3_key} updated")
