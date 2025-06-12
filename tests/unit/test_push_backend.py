@@ -4,14 +4,7 @@ import pytest
 
 from tax_bracket_ingest.run_ingest import push_csv_to_backend
 
-class DummyResponse:
-    def __init__(self):
-        self.status_code = 200
-    def raise_for_status(self):
-        # This method is intentionally left empty because DummyResponse always simulates a successful response (status_code 200).
-        pass
-
-def test_push_csv_to_backend_formats_and_sends(monkeypatch, sample_normalized_df):
+def test_push_csv_to_backend_formats_and_sends(monkeypatch, sample_normalized_df, dummy_response):
     
     df = sample_normalized_df
 
@@ -23,7 +16,7 @@ def test_push_csv_to_backend_formats_and_sends(monkeypatch, sample_normalized_df
             data.decode("utf-8") if isinstance(data, (bytes, bytearray)) else data
         )
         captured["timeout"] = timeout
-        return DummyResponse()
+        return dummy_response
 
     monkeypatch.setattr("requests.post", fake_post)
 

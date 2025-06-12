@@ -11,6 +11,13 @@ import tax_bracket_ingest.scraper.fetch as fetch_mod
 
 TEST_DATA = Path(__file__).parent / "data"
 
+class DummyResponse:
+    def __init__(self):
+        self.status_code = 200
+    def raise_for_status(self):
+        # This method is intentionally left empty because DummyResponse always simulates a successful response (status_code 200).
+        pass
+
 @pytest.fixture(scope="session")
 def test_data_dir():
     """Path to tests/data"""
@@ -65,3 +72,8 @@ def backend_url(monkeypatch):
     """Ensure BACKEND_URL is set for both unit and integration tests."""
     monkeypatch.setenv("BACKEND_URL", "http://fake-backend")
     yield
+    
+@pytest.fixture
+def dummy_response():
+    """Returns a dummy response object with a 200 status code."""
+    return DummyResponse()

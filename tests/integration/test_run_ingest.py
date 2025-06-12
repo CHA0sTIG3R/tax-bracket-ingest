@@ -9,7 +9,8 @@ from tax_bracket_ingest.run_ingest import main as run_ingest_main
 def test_run_ingest_end_to_end(
     moto_s3_client,
     sample_page_html, sample_normalized_csv_bytes,
-    sample_normalized_df, capsys, monkeypatch
+    sample_normalized_df, capsys, monkeypatch,
+    dummy_response
 ):
     
     bucket_name = "test-bucket"
@@ -31,7 +32,7 @@ def test_run_ingest_end_to_end(
         captured["url"]      = url
         captured["headers"]  = headers
         captured["body_csv"] = data.decode("utf-8")
-        return type("R", (), {"raise_for_status": lambda self: None})
+        return dummy_response
     
     monkeypatch.setattr(requests, "post", fake_post)
     
