@@ -2,13 +2,14 @@
 import io
 import pandas as pd
 import pytest
+import requests
 from tax_bracket_ingest.run_ingest import main as run_ingest_main
 
 @pytest.mark.integration
 def test_run_ingest_end_to_end(
     moto_s3_client,
     sample_page_html, sample_normalized_csv_bytes,
-    sample_normalized_df,capsys
+    sample_normalized_df, capsys, monkeypatch
 ):
     
     bucket_name = "test-bucket"
@@ -24,7 +25,15 @@ def test_run_ingest_end_to_end(
     
     import tax_bracket_ingest.scraper.fetch as fetch_mod
     fetch_mod.fetch_irs_data = lambda: sample_page_html
-
+    
+    captured = {}
+    def fake_post(url, headers, data, timeout):
+        captured["url"]      = url
+        captured["headers"]  = headers
+        captured["body_csv"] = data.decode("utf-8")
+        return type("R", (), {"raise_for_status": lambda self: None})
+    
+    monkeypatch.setattr(requests, "post", fake_post)
     
     run_ingest_main()
     out = capsys.readouterr().out
@@ -34,7 +43,8 @@ def test_run_ingest_end_to_end(
     resp = moto_s3_client.get_object(Bucket=bucket_name, Key="history.csv")
     updated_csv = resp["Body"].read().decode("utf-8")
     updated_df = pd.read_csv(io.StringIO(updated_csv))
-
+    
+    pushed_df = pd.read_csv(io.StringIO(captured["body_csv"]))
     
     from tax_bracket_ingest.parser.parser import (
         parse_irs_data_to_dataframe,
@@ -47,6 +57,8 @@ def test_run_ingest_end_to_end(
     old_df = sample_normalized_df
 
     # 6. Validate
+    assert captured["url"].endswith("/api/tax-brackets/upload")
+    assert captured["headers"]["Content-Type"] == "text/csv"
     assert len(updated_df) == len(new_df) + len(old_df)
     pd.testing.assert_frame_equal(
         updated_df.iloc[:len(new_df)].reset_index(drop=True),
@@ -56,5 +68,11 @@ def test_run_ingest_end_to_end(
     pd.testing.assert_frame_equal(
         updated_df.iloc[len(new_df):].reset_index(drop=True),
         old_df.reset_index(drop=True),
+        check_dtype=False
+    )
+    
+    pd.testing.assert_frame_equal(
+        pushed_df.reset_index(drop=True),
+        updated_df.reset_index(drop=True),
         check_dtype=False
     )

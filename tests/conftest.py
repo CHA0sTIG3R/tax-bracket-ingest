@@ -59,3 +59,9 @@ def aws_credentials_env(monkeypatch):
     monkeypatch.setenv("S3_BUCKET", "test-bucket")
     monkeypatch.setenv("S3_KEY", "history.csv")
     yield
+    
+@pytest.fixture(autouse=True)
+def backend_url(monkeypatch):
+    """Ensure BACKEND_URL is set for both unit and integration tests."""
+    monkeypatch.setenv("BACKEND_URL", "http://fake-backend")
+    yield
