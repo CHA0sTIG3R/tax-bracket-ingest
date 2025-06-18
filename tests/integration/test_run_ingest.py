@@ -58,7 +58,7 @@ def test_run_ingest_end_to_end(
     old_df = sample_normalized_df
 
     # 6. Validate
-    assert captured["url"].endswith("/api/tax-brackets/upload")
+    assert captured["url"].endswith("/api/v1/tax/upload")
     assert captured["headers"]["Content-Type"] == "text/csv"
     assert len(updated_df) == len(new_df) + len(old_df)
     pd.testing.assert_frame_equal(
@@ -74,6 +74,6 @@ def test_run_ingest_end_to_end(
     
     pd.testing.assert_frame_equal(
         pushed_df.reset_index(drop=True),
-        updated_df.reset_index(drop=True),
+        new_df.reset_index(drop=True),
         check_dtype=False
     )

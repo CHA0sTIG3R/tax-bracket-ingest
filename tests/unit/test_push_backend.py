@@ -22,7 +22,7 @@ def test_push_csv_to_backend_formats_and_sends(monkeypatch, sample_normalized_df
 
     push_csv_to_backend(df)
 
-    assert captured["url"] == "http://fake-backend/api/tax-brackets/upload"
+    assert captured["url"] == "http://fake-backend/api/v1/tax/upload"
     assert captured["headers"]["Content-Type"] == "text/csv"
     assert captured["timeout"] == 30
 
