@@ -1,5 +1,4 @@
 # Python
-env/
 /.env
 __pycache__/
 *.egg
@@ -7,11 +6,45 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Virtual Environments
+venv/
+env/
+
+# Build and Distribution
+build/
+dist/
+*.whl
+# Test and Coverage
+.coverage
+*.cover
+
+# Documentation
+docs/_build/
+
+# Logs
+*.log
+
+# Data
+data/
+
+# Configuration
+config.yaml
+config.json
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+/jupyter_notes
+.ipynb
+
 # OS / Editor
 *.swp
 .vscode/
 .idea/
 .DS_Store
-
-/jupyter_notes
-.ipynb
