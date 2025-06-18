@@ -31,10 +31,14 @@ def write_df_to_s3(df: pd.DataFrame, key: str):
     
 def push_csv_to_backend(df: pd.DataFrame):
     csv_bytes = df.to_csv(index=False).encode('utf-8')
-    url = os.getenv("BACKEND_URL") + "/api/tax-brackets/upload"
+    url = os.getenv("BACKEND_URL") + "/api/v1/tax/upload"
+    headers = {
+        "Content-Type": "text/csv", 
+        "X-API-KEY": os.getenv("INGEST_API_KEY")
+    }
     resp = requests.post(
         url,
-        headers={"Content-Type": "text/csv"},
+        headers=headers,
         data=csv_bytes,
         timeout=30
     )
@@ -64,7 +68,7 @@ def main():
         print(f"Year {first_year} already exists and is identical — skipping append.")
     
     # Push to backend
-    push_csv_to_backend(hist_df)
+    push_csv_to_backend(curr_df)
     
     # update S3
     write_df_to_s3(hist_df, s3_key)
