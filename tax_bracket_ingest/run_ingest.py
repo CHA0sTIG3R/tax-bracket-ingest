@@ -1,4 +1,10 @@
-#tax_bracket_ingest/run_ingest.py
+# tax_bracket_ingest/run_ingest.py
+from tax_bracket_ingest.logging_config import setup_logging
+setup_logging()
+
+import logging
+logger = logging.getLogger(__name__)
+
 from io import BytesIO
 import os
 import boto3
@@ -63,18 +69,44 @@ def main():
     # Compare and append only if new
     if not curr_df.equals(recent_year_rows):
         hist_df = pd.concat([curr_df, prev_hist], ignore_index=True)
-        print(f"Year {first_year} in historical is different from scraped — appending.")
+        logger.info("append_new_data", extra={
+            "year": first_year,
+            "rows_added": len(curr_df),
+            "action": "Appending new data to historical CSV"
+        })
     else:
         hist_df = prev_hist
-        print(f"Year {first_year} already exists and is identical — skipping append.")
+        logger.info("skipping_append", extra={
+            "year": first_year,
+            "rows": len(curr_df),
+            "action": "No new data to append, skipping"
+        })
     
     # Push to backend
     push_csv_to_backend(curr_df)
+    logger.info("pushed_to_backend",  extra={
+        "rows": len(curr_df),
+        "action": "Pushed current tax data to backend"
+    })
     
     # update S3
     write_df_to_s3(hist_df, s3_key)
+    logger.info("updated_s3",  extra={
+        "s3_bucket": s3_bucket,
+        "s3_key": s3_key,
+        "rows": len(hist_df),
+        "action": "Updated historical CSV in S3"
+    })
     
-    print(f"Historical CSV at s3://{s3_bucket}/{s3_key} updated")
+    logger.info("ingest_complete", extra={"action": "Ingest process completed successfully"})
 
 if __name__ == "__main__":
-    main()
+    logger.info("starting_ingest",  extra={"action": "Starting ingest process"})
+    try:
+        main()
+    except Exception as e:
+        logger.error("ingest_error", error=str(e), extra={"action": "Error during ingest process"})
+        raise
+    finally:
+        logger.info("ingest_finished", extra={"action": "Ingest process finished"})
+        print("Ingest process completed. Check logs for details.")
