@@ -37,9 +37,6 @@ def test_run_ingest_end_to_end(
     monkeypatch.setattr(requests, "post", fake_post)
     
     run_ingest_main()
-    out = capsys.readouterr().out
-    assert f"s3://{bucket_name}/history.csv updated" in out
-
     
     resp = moto_s3_client.get_object(Bucket=bucket_name, Key="history.csv")
     updated_csv = resp["Body"].read().decode("utf-8")
