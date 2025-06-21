@@ -27,6 +27,7 @@ docs/_build/
 
 # Logs
 *.log
+/logs/
 
 # Data
 data/
