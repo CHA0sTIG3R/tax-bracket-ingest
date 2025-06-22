@@ -29,9 +29,6 @@ docs/_build/
 *.log
 /logs/
 
-# Data
-data/
-
 # Configuration
 config.yaml
 config.json
