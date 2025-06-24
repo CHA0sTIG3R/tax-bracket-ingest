@@ -50,6 +50,7 @@ def push_csv_to_backend(df: pd.DataFrame):
         timeout=30
     )
     resp.raise_for_status()
+    return resp.content.decode('utf-8')
     
     
 def main():
@@ -83,9 +84,10 @@ def main():
         })
     
     # Push to backend
-    push_csv_to_backend(curr_df)
+    resp = push_csv_to_backend(curr_df)
     logger.info("pushed_to_backend",  extra={
         "rows": len(curr_df),
+        "response": resp,
         "action": "Pushed current tax data to backend"
     })
     
