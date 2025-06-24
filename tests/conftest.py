@@ -15,6 +15,7 @@ TEST_DATA = Path(__file__).parent / "data"
 class DummyResponse:
     def __init__(self):
         self.status_code = 200
+        self.content = b"dummy content"
     def raise_for_status(self):
         # This method is intentionally left empty because DummyResponse always simulates a successful response (status_code 200).
         pass

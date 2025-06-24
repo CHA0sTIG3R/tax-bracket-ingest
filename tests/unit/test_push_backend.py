@@ -21,8 +21,8 @@ def test_push_csv_to_backend_formats_and_sends(monkeypatch, sample_normalized_df
 
     monkeypatch.setattr("requests.post", fake_post)
 
-    push_csv_to_backend(df)
-
+    response = push_csv_to_backend(df)
+    assert response == "dummy content"
     assert captured["url"] == "http://fake-backend/api/v1/tax/upload"
     assert captured["headers"]["Content-Type"] == "text/csv"
     assert captured["timeout"] == 30
