@@ -32,6 +32,7 @@ def test_run_ingest_end_to_end(
         captured["url"]      = url
         captured["headers"]  = headers
         captured["body_csv"] = data.decode("utf-8")
+        captured["timeout"] = timeout
         return dummy_response
     
     monkeypatch.setattr(requests, "post", fake_post)
@@ -56,7 +57,9 @@ def test_run_ingest_end_to_end(
 
     # 6. Validate
     assert captured["url"].endswith("/api/v1/tax/upload")
+    assert "X-API-KEY" in captured["headers"]
     assert captured["headers"]["Content-Type"] == "text/csv"
+    assert dummy_response.content.decode("utf-8") == "dummy content"
     assert len(updated_df) == len(new_df) + len(old_df)
     pd.testing.assert_frame_equal(
         updated_df.iloc[:len(new_df)].reset_index(drop=True),
