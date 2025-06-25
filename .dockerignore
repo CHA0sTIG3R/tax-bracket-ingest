@@ -1,0 +1,15 @@
+# prevent build-context bloat
+.git
+__pycache__/
+*.pyc
+
+# coverage/test artifacts
+coverage.xml
+*.egg-info/
+
+# local secrets
+.env
+
+# virtual environments
+venv/
+env/
