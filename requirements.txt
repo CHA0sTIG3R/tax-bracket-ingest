@@ -33,7 +33,7 @@ responses==0.25.7
 s3transfer==0.13.0
 six==1.17.0
 soupsieve==2.7
--e git+https://github.com/CHA0sTIG3R/tax-bracket-ingest.git@ac4d10db2e4b31449ba35d481dd18a709bd983c0#egg=tax_bracket_ingest
+-e git+https://github.com/CHA0sTIG3R/tax-bracket-ingest.git@33d041d36188344768c2d2cda00be90113810858#egg=tax_bracket_ingest
 typing_extensions==4.14.0
 tzdata==2025.2
 urllib3==2.4.0
