@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 from io import BytesIO
 import os
 import boto3
-from dotenv import load_dotenv
 
 import pandas as pd
 import requests
@@ -17,8 +16,6 @@ from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_d
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
 
 def load_env_vars():
-    load_dotenv()
-    
     s3_bucket = os.getenv("S3_BUCKET")
     s3_key = os.getenv("S3_KEY")
     
