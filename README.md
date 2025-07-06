@@ -153,8 +153,6 @@ GitHub Actions (`.github/workflows/ci.yml`) handles:
 - Coverage minimum threshold of 90%
 - Uploading reports to Codecov
 
-Add these badges to your profile:
-
 ```markdown
 [![CI](https://github.com/CHA0sTIG3R/tax-bracket-ingest/actions/workflows/ci.yml/badge.svg)](...)
 [![Codecov](https://codecov.io/gh/CHA0sTIG3R/tax-bracket-ingest/branch/main/graph/badge.svg)](...)
