@@ -2,8 +2,11 @@
 .git
 __pycache__/
 *.pyc
+dist/
+build/
 
 # coverage/test artifacts
+.coverage
 coverage.xml
 *.egg-info/
 
@@ -13,3 +16,4 @@ coverage.xml
 # virtual environments
 venv/
 env/
+.venv/
