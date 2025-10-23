@@ -21,9 +21,6 @@ WORKDIR /app
 
 RUN useradd -m -u 10001 appuser
 
-# Create log directory
-RUN mkdir -p logs && chown appuser:appuser logs
-
 # Copy only the necessary files from the builder stage
 COPY --from=builder /dist/*.whl  /tmp/
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
@@ -33,6 +30,9 @@ RUN pip install --no-cache-dir /tmp/*.whl && rm /tmp/*.whl \
     && rm -rf /usr/local/lib/python3.11/site-packages/pip \
     && rm -rf /usr/local/lib/python3.11/site-packages/setuptools \
     && rm -rf /usr/local/lib/python3.11/site-packages/wheel
+
+# Create log directory
+RUN mkdir -p logs && chown appuser:appuser logs
 
 COPY tax_bracket_ingest ./tax_bracket_ingest
 
