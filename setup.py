@@ -6,10 +6,13 @@ setup(
     author='Hamza Olowu',
     packages=find_packages(),
     install_requires=[
-        'pandas>=1.0.0',
-        'beautifulsoup4>=4.9.0',
-        'requests>=2.24.0',
-        'pytest>=6.0.0'
+        "beautifulsoup4==4.13.4",
+        "boto3==1.38.36",
+        "numpy==1.26.4",
+        "pandas==2.3.0",
+        "python-dotenv==1.1.0",
+        "python-json-logger==3.3.0",
+        "requests==2.32.4",
     ],
     description='A package to scrape, parse, and normalize IRS tax bracket data.'
 )
