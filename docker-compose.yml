@@ -1,11 +1,14 @@
-
+# docker-compose.yml
 services:
-  tax_ingest:
+  lambda:
     build:
       context: .
-      dockerfile: Dockerfile
-    
-    env_file:
-      - .env
-    
-    command: []
+      dockerfile: Dockerfile.lambda
+    platform: linux/amd64
+
+    # profiles: ["local"]
+    # env_file:
+    #   - .env
+
+    # ports:
+    #   - "9000:8080"
