@@ -39,7 +39,7 @@ This ensures your backend always has the latest brackets, and you retain an immu
 - **Spring service integration**: HTTP POST of new bracket rows to the [Marginal-tax-rate-calculator backend](https://github.com/CHA0sTIG3R/Marginal-tax-rate-calculator).
 - **Extensible design** to support additional storage backends or notification steps.
 - **Comprehensive pytest suite** (unit and integration markers).
-- **GitHub Actions CI** with coverage enforcement.
+- **GitHub Actions CI/CD** with coverage enforcement and automated Lambda deployments.
 
 ## Implementation Status
 
@@ -81,20 +81,32 @@ Below is a high-level status of the key components:
    ```bash
    pip install -r requirements.txt        # runtime dependencies
    pip install -r requirements-dev.txt    # development & testing extras
-   pip install .                          # install the package locally
    ```
+
+   > Optional: `pip install -e .` if you prefer the package on your import path outside this repo.
 
 ## Configuration
 
 Create a `.env` file in the project root with the following values:
 
 ```ini
-# AWS S3 settings\ nS3_BUCKET=your-s3-bucket-name
+# AWS
+AWS_REGION=us-east-1
+S3_BUCKET=your-s3-bucket-name
 S3_KEY=history.csv
+DRY_RUN=1              # set to 0 to enable writes to S3/backend
 
-# Backend API endpoint\ nBACKEND_URL=https://your-backend/api/v1/tax/upload
+# Backend (optional)
+BACKEND_URL=https://your-backend      # omit to skip pushing to the API
+INGEST_API_KEY=your-shared-secret
 
-# AWS Credentials (if not using instance roles)
+# Logging
+ENV=dev
+LOG_TO_FILE=1
+LOG_PATH=logs/tax_bracket_ingest.log
+LOG_RETENTION_DAYS=7
+
+# AWS credentials (only when not using profiles/instance roles/OIDC)
 AWS_ACCESS_KEY_ID=...
 AWS_SECRET_ACCESS_KEY=...
 AWS_SESSION_TOKEN=...   # optional
@@ -124,6 +136,8 @@ To execute the end-to-end ingestion manually:
 python -m tax_bracket_ingest.run_ingest
 ```
 
+`DRY_RUN` defaults to `1`, so the command logs actions without touching S3 or the backend. Set `DRY_RUN=0` in your environment when you are ready to persist data.
+
 Sample output:
 
 ```txt
@@ -148,14 +162,15 @@ Coverage reports are generated automatically (see `coverage.xml`).
 
 ## Continuous Integration
 
-GitHub Actions (`.github/workflows/ci.yml`) handles:
+GitHub Actions (`.github/workflows/cicd.yml`) handles:
 
-- Testing on Python 3.11 & 3.12
-- Coverage minimum threshold of 90%
-- Uploading reports to Codecov
+- Running pytest with coverage on Python 3.11
+- Uploading coverage reports to Codecov
+- Assuming an AWS role via OIDC, building the Lambda container image, and pushing it to ECR
+- Updating the live Lambda function to the latest image
 
 ```markdown
-[![CI](https://github.com/CHA0sTIG3R/tax-bracket-ingest/actions/workflows/ci.yml/badge.svg)](...)
+[![CI](https://github.com/CHA0sTIG3R/tax-bracket-ingest/actions/workflows/cicd.yml/badge.svg)](...)
 [![Codecov](https://codecov.io/gh/CHA0sTIG3R/tax-bracket-ingest/branch/main/graph/badge.svg)](...)
 ```
 
