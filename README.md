@@ -79,8 +79,9 @@ Below is a high-level status of the key components:
 3. Install dependencies:
 
    ```bash
-   pip install -r requirements.txt
-   pip install -e .
+   pip install -r requirements.txt        # runtime dependencies
+   pip install -r requirements-dev.txt    # development & testing extras
+   pip install .                          # install the package locally
    ```
 
 ## Configuration

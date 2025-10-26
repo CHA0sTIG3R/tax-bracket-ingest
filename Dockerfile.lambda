@@ -1,13 +1,14 @@
 # Dockerfile.lambda
 FROM public.ecr.aws/lambda/python:3.11 AS base
 
-# Install git so pip can install VCS (git) dependencies from requirements.txt
-RUN yum update -y && yum install -y git \
-	&& yum clean all
-
-COPY requirements.txt ./
+# Copy dependency manifests and install runtime deps
+COPY requirements.txt setup.py ./
 RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
+
+# Install the package into the image
 COPY tax_bracket_ingest ./tax_bracket_ingest
+
+# Lambda handler entrypoint
 COPY lambda_handler.py ./
 
 CMD [ "lambda_handler.handler" ]
