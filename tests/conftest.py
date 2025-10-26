@@ -1,7 +1,5 @@
 # tests/conftest.py
-import os
 from pathlib import Path
-import dotenv
 from moto import mock_aws
 import pytest
 import pandas as pd

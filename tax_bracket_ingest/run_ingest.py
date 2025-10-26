@@ -1,5 +1,8 @@
 # tax_bracket_ingest/run_ingest.py
+from dotenv import load_dotenv
 from tax_bracket_ingest.logging_config import setup_logging
+
+load_dotenv()
 setup_logging()
 
 import logging
@@ -17,7 +20,13 @@ from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_d
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
 
 TRUTHY_ENV_VALUES = {"1", "true", "t", "yes", "y", "on"}
-DRY_RUN = os.getenv("DRY_RUN", "").strip().lower() in TRUTHY_ENV_VALUES
+def get_env_flag(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in TRUTHY_ENV_VALUES
+
+DRY_RUN = get_env_flag("DRY_RUN", default=True)
 print(f'DRY_RUN is set to {DRY_RUN}')
 
 def load_env_vars():
@@ -61,7 +70,17 @@ def push_csv_to_backend(df: pd.DataFrame):
         )
         return "dry_run_skipped"
     csv_bytes = df.to_csv(index=False).encode('utf-8')
-    url = os.getenv("BACKEND_URL") + "/api/v1/tax/upload"
+    backend_url = os.getenv("BACKEND_URL")
+    if not backend_url:
+        logger.warning(
+            "backend_url_missing",
+            extra={
+                "rows": len(df),
+                "action": "Skipped pushing current tax data because BACKEND_URL is unset",
+            },
+        )
+        return "skipped_no_backend_url"
+    url = backend_url + "/api/v1/tax/upload"
     headers = {
         "Content-Type": "text/csv", 
         "X-API-KEY": os.getenv("INGEST_API_KEY")
