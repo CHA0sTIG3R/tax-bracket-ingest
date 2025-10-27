@@ -64,6 +64,6 @@ jobs:
 
       - name: Update Lambda function code
         run: |
-          aws Lambda update-function-code \
+          aws lambda update-function-code \
             --function-name $LAMBDA_NAME \
             --image-uri $IMAGE_URI
