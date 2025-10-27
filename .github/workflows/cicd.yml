@@ -60,7 +60,7 @@ jobs:
           docker build --platform linux/amd64 --provenance=false -f Dockerfile.lambda -t $ECR_URI:$GIT_SHA -t $ECR_URI:prod .
           docker push $ECR_URI:$GIT_SHA
           docker push $ECR_URI:prod
-          echo "IMAGE_URI=$ECR_URI:prod" >> $GITHUB_ENV
+          echo "IMAGE_URI=$ECR_URI:$GIT_SHA" >> $GITHUB_ENV
 
       - name: Update Lambda function code
         run: |
