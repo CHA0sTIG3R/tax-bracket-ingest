@@ -48,10 +48,10 @@ jobs:
       
       - name: Build and push Lambda image
         env:
-          ECR_URI: ${{ steps.ecr.outputs.repositoryUri }}
+          ECR_URI: ${{ steps.ecr.outputs.repositories.repositoryUri }}
         run: |
           GIT_SHA=${GITHUB_SHA::7}
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${ECR_URI}
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${ECR_URI/%/*}
           docker build --platform linux/amd64 --provenance=false -f Dockerfile.lambda -t $ECR_URI:$GIT_SHA -t $ECR_URI:prod .
           docker push $ECR_URI:$GIT_SHA
           docker push $ECR_URI:prod
