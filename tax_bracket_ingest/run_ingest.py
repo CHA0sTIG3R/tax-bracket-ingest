@@ -1,5 +1,7 @@
 # tax_bracket_ingest/run_ingest.py
 from dotenv import load_dotenv
+from typing import Optional
+
 from tax_bracket_ingest.logging_config import setup_logging
 
 load_dotenv()
@@ -26,8 +28,8 @@ def get_env_flag(name: str, default: bool = False) -> bool:
         return default
     return raw.strip().lower() in TRUTHY_ENV_VALUES
 
-DRY_RUN = get_env_flag("DRY_RUN", default=True)
-print(f'DRY_RUN is set to {DRY_RUN}')
+def is_dry_run() -> bool:
+    return get_env_flag("DRY_RUN", default=True)
 
 def load_env_vars():
     s3_bucket = os.getenv("S3_BUCKET")
@@ -42,8 +44,10 @@ def read_csv_from_s3(key: str) -> pd.DataFrame:
     resp = s3.get_object(Bucket=load_env_vars()[0], Key=key)
     return pd.read_csv(BytesIO(resp["Body"].read()))
 
-def write_df_to_s3(df: pd.DataFrame, key: str):
-    if DRY_RUN:
+def write_df_to_s3(df: pd.DataFrame, key: str, dry_run: Optional[bool] = None):
+    if dry_run is None:
+        dry_run = is_dry_run()
+    if dry_run:
         logger.info(
             "dry_run_skip_write_s3",
             extra={
@@ -59,8 +63,10 @@ def write_df_to_s3(df: pd.DataFrame, key: str):
     buf.seek(0)
     s3.put_object(Bucket=load_env_vars()[0], Key=key, Body=buf.getvalue())
     
-def push_csv_to_backend(df: pd.DataFrame):
-    if DRY_RUN:
+def push_csv_to_backend(df: pd.DataFrame, dry_run: Optional[bool] = None):
+    if dry_run is None:
+        dry_run = is_dry_run()
+    if dry_run:
         logger.info(
             "dry_run_skip_backend_push",
             extra={
@@ -96,7 +102,10 @@ def push_csv_to_backend(df: pd.DataFrame):
     
     
 def main():
-    if DRY_RUN:
+    dry_run = is_dry_run()
+    print(f'DRY_RUN is set to {dry_run}')
+
+    if dry_run:
         logger.info(
             "dry_run_mode",
             extra={"action": "Running ingest process in dry-run mode"},
@@ -109,7 +118,7 @@ def main():
     
     s3_bucket, s3_key = load_env_vars()
     
-    if DRY_RUN:
+    if dry_run:
         hist_df = curr_df
         logger.info(
             "dry_run_skip_history_fetch",
@@ -141,8 +150,8 @@ def main():
             })
     
     # Push to backend
-    resp = push_csv_to_backend(curr_df)
-    if not DRY_RUN:
+    resp = push_csv_to_backend(curr_df, dry_run=dry_run)
+    if not dry_run:
         logger.info("pushed_to_backend",  extra={
             "rows": len(curr_df),
             "response": resp,
@@ -150,8 +159,8 @@ def main():
         })
     
     # update S3
-    write_df_to_s3(hist_df, s3_key)
-    if not DRY_RUN:
+    write_df_to_s3(hist_df, s3_key, dry_run=dry_run)
+    if not dry_run:
         logger.info("updated_s3",  extra={
             "s3_bucket": s3_bucket,
             "s3_key": s3_key,
