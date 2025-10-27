@@ -1,6 +1,8 @@
 # tax_bracket_ingest/run_ingest.py
 from dotenv import load_dotenv
 from typing import Optional
+from dataclasses import dataclass
+from functools import lru_cache
 
 from tax_bracket_ingest.logging_config import setup_logging
 
@@ -21,7 +23,48 @@ from tax_bracket_ingest.scraper.fetch import fetch_irs_data
 from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_dataframe
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
 
+
+# TODO: Historical diffing grabs prev_hist.iloc[0]["Year"] (tax_bracket_ingest/run_ingest.py:131–149). If the CSV is stored oldest-first, you’ll compare against the wrong year and never append. Base the comparison on prev_hist["Year"].max().
+# TODO: Backend push lacks error handling (tax_bracket_ingest/run_ingest.py:166–185). Wrap the requests.post call in try/except to catch network errors and log appropriately without crashing the entire ingest process.
+# TODO: push_csv_to_backend always posts the entire DataFrame and doesn’t surface partial failures (tax_bracket_ingest/run_ingest.py:66–101). Log the response body/status, handle JSON error payloads.
+
+
+
 TRUTHY_ENV_VALUES = {"1", "true", "t", "yes", "y", "on"}
+
+
+@dataclass(frozen=True)
+class IngestConfig:
+    s3_bucket: str
+    s3_key: str
+
+
+@lru_cache(maxsize=1)
+def get_ingest_config() -> IngestConfig:
+    bucket = os.getenv("S3_BUCKET")
+    key = os.getenv("S3_KEY")
+    missing = [name for name, value in (("S3_BUCKET", bucket), ("S3_KEY", key)) if not value]
+    if missing:
+        logger.error(
+            "missing_env_vars",
+            extra={
+                "action": "Required S3 configuration missing",
+                "missing": missing,
+            },
+        )
+        raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+    config = IngestConfig(s3_bucket=bucket, s3_key=key)
+    logger.debug(
+        "ingest_config_loaded",
+        extra={
+            "s3_bucket": config.s3_bucket,
+            "s3_key": config.s3_key,
+            "action": "Loaded ingest configuration from environment",
+        },
+    )
+    return config
+
+
 def get_env_flag(name: str, default: bool = False) -> bool:
     raw = os.getenv(name)
     if raw is None:
@@ -31,20 +74,25 @@ def get_env_flag(name: str, default: bool = False) -> bool:
 def is_dry_run() -> bool:
     return get_env_flag("DRY_RUN", default=True)
 
-def load_env_vars():
-    s3_bucket = os.getenv("S3_BUCKET")
-    s3_key = os.getenv("S3_KEY")
-    print(f's3_bucket: {s3_bucket}, s3_key: {s3_key}')
     
-    return s3_bucket, s3_key
-    
-def read_csv_from_s3(key: str) -> pd.DataFrame:
+def read_csv_from_s3(key: str, config: Optional[IngestConfig] = None) -> pd.DataFrame:
+    if config is None:
+        config = get_ingest_config()
     s3 = boto3.client("s3")
-    print(f'bucket: {load_env_vars()[0]}, key: {key}')
-    resp = s3.get_object(Bucket=load_env_vars()[0], Key=key)
+    logger.debug(
+        "fetch_s3_object",
+        extra={
+            "s3_bucket": config.s3_bucket,
+            "s3_key": key,
+            "action": "Fetching CSV from S3",
+        },
+    )
+    resp = s3.get_object(Bucket=config.s3_bucket, Key=key)
     return pd.read_csv(BytesIO(resp["Body"].read()))
 
-def write_df_to_s3(df: pd.DataFrame, key: str, dry_run: Optional[bool] = None):
+def write_df_to_s3(df: pd.DataFrame, key: str, dry_run: Optional[bool] = None, config: Optional[IngestConfig] = None):
+    if config is None:
+        config = get_ingest_config()
     if dry_run is None:
         dry_run = is_dry_run()
     if dry_run:
@@ -61,7 +109,7 @@ def write_df_to_s3(df: pd.DataFrame, key: str, dry_run: Optional[bool] = None):
     buf = BytesIO()
     df.to_csv(buf, index=False)
     buf.seek(0)
-    s3.put_object(Bucket=load_env_vars()[0], Key=key, Body=buf.getvalue())
+    s3.put_object(Bucket=config.s3_bucket, Key=key, Body=buf.getvalue())
     
 def push_csv_to_backend(df: pd.DataFrame, dry_run: Optional[bool] = None):
     if dry_run is None:
@@ -103,7 +151,15 @@ def push_csv_to_backend(df: pd.DataFrame, dry_run: Optional[bool] = None):
     
 def main():
     dry_run = is_dry_run()
-    print(f'DRY_RUN is set to {dry_run}')
+    logger.info(
+        "dry_run_configured",
+        extra={
+            "dry_run": dry_run,
+            "action": "Resolved dry run setting from environment",
+        },
+    )
+
+    config = get_ingest_config()
 
     if dry_run:
         logger.info(
@@ -116,8 +172,6 @@ def main():
     raw_df = parse_irs_data_to_dataframe(raw_struct)
     curr_df = process_irs_dataframe(raw_df)
     
-    s3_bucket, s3_key = load_env_vars()
-    
     if dry_run:
         hist_df = curr_df
         logger.info(
@@ -128,7 +182,7 @@ def main():
             },
         )
     else:
-        prev_hist = read_csv_from_s3(s3_key)
+        prev_hist = read_csv_from_s3(config.s3_key, config=config)
         
         first_year = prev_hist.iloc[0]["Year"]
         recent_year_rows = prev_hist[prev_hist["Year"] == first_year]
@@ -159,11 +213,11 @@ def main():
         })
     
     # update S3
-    write_df_to_s3(hist_df, s3_key, dry_run=dry_run)
+    write_df_to_s3(hist_df, config.s3_key, dry_run=dry_run, config=config)
     if not dry_run:
         logger.info("updated_s3",  extra={
-            "s3_bucket": s3_bucket,
-            "s3_key": s3_key,
+            "s3_bucket": config.s3_bucket,
+            "s3_key": config.s3_key,
             "rows": len(hist_df),
             "action": "Updated historical CSV in S3"
         })
@@ -179,4 +233,3 @@ if __name__ == "__main__":
         raise
     finally:
         logger.info("ingest_finished", extra={"action": "Ingest process finished"})
-        print("Ingest process completed. Check logs for details.")
