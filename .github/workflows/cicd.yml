@@ -1,5 +1,8 @@
 name: CI + CD
 
+# TODO: CI/CD can be tightened: update to actions/checkout@v4, cache pip installs, and fail fast if Codecov upload breaks (.github/workflows/cicd.yml:21–52). The Lambda Dockerfile installs requirements but never pins the application itself—pip install . keeps runtime deps aligned (Dockerfile.lambda:6–12).
+
+
 on: 
   push:
   pull_request:
