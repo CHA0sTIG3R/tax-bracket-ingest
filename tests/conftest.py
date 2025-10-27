@@ -65,6 +65,7 @@ def aws_credentials_env(monkeypatch):
     monkeypatch.setenv("AWS_SESSION_TOKEN", "testing")
     monkeypatch.setenv("S3_BUCKET", "test-bucket")
     monkeypatch.setenv("S3_KEY", "history.csv")
+    monkeypatch.setenv("DRY_RUN", "0")
     yield
     
 @pytest.fixture(autouse=True)
