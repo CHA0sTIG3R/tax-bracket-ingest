@@ -45,10 +45,15 @@ jobs:
         run: |
           aws ecr describe-repositories --repository-names $ECR_REPO || \
           aws ecr create-repository --repository-name $ECR_REPO
+          ECR_URI=$(aws ecr describe-repositories \
+            --repository-names $ECR_REPO \
+            --query 'repositories[0].repositoryUri' \
+            --output text)
+          echo "repositoryUri=$ECR_URI" >> $GITHUB_OUTPUT
       
       - name: Build and push Lambda image
         env:
-          ECR_URI: ${{ steps.ecr.outputs.repositories[0].repositoryUri }}
+          ECR_URI: ${{ steps.ecr.outputs.repositoryUri }}
         run: |
           GIT_SHA=${GITHUB_SHA::7}
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${ECR_URI%/*}
