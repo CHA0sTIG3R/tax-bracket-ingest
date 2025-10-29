@@ -4,6 +4,8 @@ import logging
 from logging.config import dictConfig
 from pythonjsonlogger import jsonlogger
 
+# TODO: setup timestamp run id logging
+
 def setup_logging():
     env = os.getenv("ENV", "dev").lower()
     level =  logging.DEBUG if env == "dev" else logging.INFO
