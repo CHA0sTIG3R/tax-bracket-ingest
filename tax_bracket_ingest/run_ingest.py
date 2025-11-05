@@ -24,7 +24,6 @@ from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_d
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
 
 
-# TODO: Historical diffing grabs prev_hist.iloc[0]["Year"] (tax_bracket_ingest/run_ingest.py:131–149). If the CSV is stored oldest-first, you’ll compare against the wrong year and never append. Base the comparison on prev_hist["Year"].max().
 # TODO: Backend push lacks error handling (tax_bracket_ingest/run_ingest.py:166–185). Wrap the requests.post call in try/except to catch network errors and log appropriately without crashing the entire ingest process.
 # TODO: push_csv_to_backend always posts the entire DataFrame and doesn’t surface partial failures (tax_bracket_ingest/run_ingest.py:66–101). Log the response body/status, handle JSON error payloads.
 
@@ -184,21 +183,21 @@ def main():
     else:
         prev_hist = read_csv_from_s3(config.s3_key, config=config)
         
-        first_year = prev_hist.iloc[0]["Year"]
-        recent_year_rows = prev_hist[prev_hist["Year"] == first_year]
+        latest_year = prev_hist["Year"].max()
+        recent_year_rows = prev_hist[prev_hist["Year"] == latest_year]
 
         # Compare and append only if new
         if not curr_df.equals(recent_year_rows):
             hist_df = pd.concat([curr_df, prev_hist], ignore_index=True)
             logger.info("append_new_data", extra={
-                "year": first_year,
+                "year": latest_year,
                 "rows_added": len(curr_df),
                 "action": "Appending new data to historical CSV"
             })
         else:
             hist_df = prev_hist
             logger.info("skipping_append", extra={
-                "year": first_year,
+                "year": latest_year,
                 "rows": len(curr_df),
                 "action": "No new data to append, skipping"
             })
