@@ -24,7 +24,6 @@ from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_d
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
 
 
-# TODO: Backend push lacks error handling (tax_bracket_ingest/run_ingest.py:166–185). Wrap the requests.post call in try/except to catch network errors and log appropriately without crashing the entire ingest process.
 # TODO: push_csv_to_backend always posts the entire DataFrame and doesn’t surface partial failures (tax_bracket_ingest/run_ingest.py:66–101). Log the response body/status, handle JSON error payloads.
 
 
@@ -138,13 +137,24 @@ def push_csv_to_backend(df: pd.DataFrame, dry_run: Optional[bool] = None):
         "Content-Type": "text/csv", 
         "X-API-KEY": os.getenv("INGEST_API_KEY")
     }
-    resp = requests.post(
-        url,
-        headers=headers,
-        data=csv_bytes,
-        timeout=30
-    )
-    resp.raise_for_status()
+    try:
+        resp = requests.post(
+            url,
+            headers=headers,
+            data=csv_bytes,
+            timeout=30
+        )
+        resp.raise_for_status()
+    except requests.RequestException:
+        logger.exception(
+            "backend_push_failed",
+            extra={
+                "rows": len(df),
+                "backend_url": url,
+                "action": "Failed to push current tax data to backend",
+            },
+        )
+        return "failed_backend_push"
     return resp.content.decode('utf-8')
     
     
