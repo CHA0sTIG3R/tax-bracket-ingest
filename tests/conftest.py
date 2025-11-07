@@ -1,4 +1,5 @@
 # tests/conftest.py
+import json
 from pathlib import Path
 from moto import mock_aws
 import pytest
@@ -11,9 +12,29 @@ import tax_bracket_ingest.scraper.fetch as fetch_mod
 TEST_DATA = Path(__file__).parent / "data"
 
 class DummyResponse:
-    def __init__(self):
-        self.status_code = 200
-        self.content = b"dummy content"
+    def __init__(self, status_code=200, content=b"dummy content", headers=None, json_body=None):
+        self.status_code = status_code
+        self.content = content
+        self._headers = headers or {"Content-Type": "text/plain"}
+        self._json_body = json_body
+
+    @property
+    def headers(self):
+        return self._headers
+
+    @property
+    def text(self):
+        return self.content.decode("utf-8", errors="replace")
+
+    @property
+    def ok(self):
+        return 200 <= self.status_code < 400
+
+    def json(self):
+        if self._json_body is not None:
+            return self._json_body
+        return json.loads(self.text)
+
     def raise_for_status(self):
         # This method is intentionally left empty because DummyResponse always simulates a successful response (status_code 200).
         pass

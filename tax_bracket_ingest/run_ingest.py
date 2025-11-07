@@ -24,10 +24,6 @@ from tax_bracket_ingest.parser.parser import parse_irs_data, parse_irs_data_to_d
 from tax_bracket_ingest.parser.normalize import process_irs_dataframe
 
 
-# TODO: push_csv_to_backend always posts the entire DataFrame and doesn’t surface partial failures (tax_bracket_ingest/run_ingest.py:66–101). Log the response body/status, handle JSON error payloads.
-
-
-
 TRUTHY_ENV_VALUES = {"1", "true", "t", "yes", "y", "on"}
 
 
@@ -144,7 +140,6 @@ def push_csv_to_backend(df: pd.DataFrame, dry_run: Optional[bool] = None):
             data=csv_bytes,
             timeout=30
         )
-        resp.raise_for_status()
     except requests.RequestException:
         logger.exception(
             "backend_push_failed",
@@ -155,7 +150,35 @@ def push_csv_to_backend(df: pd.DataFrame, dry_run: Optional[bool] = None):
             },
         )
         return "failed_backend_push"
-    return resp.content.decode('utf-8')
+    content_type = resp.headers.get("Content-Type", "")
+    response_text = resp.text
+    log_extra = {
+        "rows": len(df),
+        "backend_url": url,
+        "status_code": resp.status_code,
+    }
+    payload = None
+    if "json" in content_type.lower():
+        try:
+            payload = resp.json()
+        except ValueError:
+            log_extra["response_text"] = response_text[:2048]
+            logger.warning("backend_push_invalid_json", extra=log_extra)
+        else:
+            log_extra["response_json"] = payload
+    else:
+        log_extra["response_text"] = response_text[:2048]
+    if not resp.ok:
+        logger.error("backend_push_non_2xx", extra=log_extra)
+        return "failed_backend_push"
+    if isinstance(payload, dict):
+        errors = payload.get("errors") or payload.get("error")
+        if errors:
+            log_extra["errors"] = errors
+            logger.error("backend_push_error_payload", extra=log_extra)
+            return "failed_backend_payload_errors"
+    logger.info("backend_push_response", extra=log_extra)
+    return response_text
     
     
 def main():
