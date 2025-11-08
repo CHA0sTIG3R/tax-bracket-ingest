@@ -1,8 +1,5 @@
 name: CI + CD
 
-# TODO: CI/CD can be tightened: update to actions/checkout@v4, cache pip installs, and fail fast if Codecov upload breaks (.github/workflows/cicd.yml:21–52). The Lambda Dockerfile installs requirements but never pins the application itself—pip install . keeps runtime deps aligned (Dockerfile.lambda:6–12).
-
-
 on: 
   push:
   pull_request:
@@ -21,11 +18,19 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Cache pip installs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install deps & test
         run: |
@@ -33,9 +38,6 @@ jobs:
           pip install -r requirements-dev.txt
           pytest --cov=tax_bracket_ingest --cov-report=xml
 
-      - uses: codecov/codecov-action@v4
-        with:
-          files: coverage.xml
       
       - name: Configure AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4

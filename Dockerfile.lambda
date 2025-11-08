@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
 
 # Install the package into the image
 COPY tax_bracket_ingest ./tax_bracket_ingest
+RUN pip install --no-cache-dir --prefer-binary .
 
 # Lambda handler entrypoint
 COPY lambda_handler.py ./
