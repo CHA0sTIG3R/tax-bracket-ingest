@@ -68,6 +68,9 @@ def get_env_flag(name: str, default: bool = False) -> bool:
 def is_dry_run() -> bool:
     return get_env_flag("DRY_RUN", default=True)
 
+def should_push_backend() -> bool:
+    return get_env_flag("ENABLE_BACKEND_PUSH", default=False)
+
     
 def read_csv_from_s3(key: str, config: Optional[IngestConfig] = None) -> pd.DataFrame:
     if config is None:
@@ -235,14 +238,23 @@ def main():
                 "action": "No new data to append, skipping"
             })
     
-    # Push to backend
-    resp = push_csv_to_backend(curr_df, dry_run=dry_run)
-    if not dry_run:
-        logger.info("pushed_to_backend",  extra={
-            "rows": len(curr_df),
-            "response": resp,
-            "action": "Pushed current tax data to backend"
-        })
+    # Push to backend when enabled
+    if should_push_backend():
+        resp = push_csv_to_backend(curr_df, dry_run=dry_run)
+        if not dry_run:
+            logger.info("pushed_to_backend",  extra={
+                "rows": len(curr_df),
+                "response": resp,
+                "action": "Pushed current tax data to backend"
+            })
+    else:
+        logger.info(
+            "backend_push_disabled",
+            extra={
+                "rows": len(curr_df),
+                "action": "Backend push skipped because ENABLE_BACKEND_PUSH=0",
+            },
+        )
     
     # update S3
     write_df_to_s3(hist_df, config.s3_key, dry_run=dry_run, config=config)
