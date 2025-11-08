@@ -99,6 +99,7 @@ DRY_RUN=1              # set to 0 to enable writes to S3/backend
 # Backend (optional)
 BACKEND_URL=https://your-backend      # omit to skip pushing to the API
 INGEST_API_KEY=your-shared-secret
+ENABLE_BACKEND_PUSH=0                 # set to 1 to re-enable backend uploads
 
 # Logging
 ENV=dev
@@ -136,7 +137,7 @@ To execute the end-to-end ingestion manually:
 python -m tax_bracket_ingest.run_ingest
 ```
 
-`DRY_RUN` defaults to `1`, so the command logs actions without touching S3 or the backend. Set `DRY_RUN=0` in your environment when you are ready to persist data.
+`DRY_RUN` defaults to `1`, so the command logs actions without touching S3 or the backend. Backend uploads also require `ENABLE_BACKEND_PUSH=1`. Set both `DRY_RUN=0` and `ENABLE_BACKEND_PUSH=1` when you are ready to persist and push data.
 
 Sample output:
 
