@@ -87,6 +87,7 @@ def aws_credentials_env(monkeypatch):
     monkeypatch.setenv("S3_BUCKET", "test-bucket")
     monkeypatch.setenv("S3_KEY", "history.csv")
     monkeypatch.setenv("DRY_RUN", "0")
+    monkeypatch.setenv("ENABLE_BACKEND_PUSH", "0")
     yield
     
 @pytest.fixture(autouse=True)

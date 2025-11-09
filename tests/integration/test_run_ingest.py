@@ -27,23 +27,16 @@ def test_run_ingest_end_to_end(
     import tax_bracket_ingest.scraper.fetch as fetch_mod
     fetch_mod.fetch_irs_data = lambda: sample_page_html
     
-    captured = {}
-    def fake_post(url, headers, data, timeout):
-        captured["url"]      = url
-        captured["headers"]  = headers
-        captured["body_csv"] = data.decode("utf-8")
-        captured["timeout"] = timeout
-        return dummy_response
+    def fail_post(*_, **__):
+        pytest.fail("Backend push should be disabled in the default flow.")
     
-    monkeypatch.setattr(requests, "post", fake_post)
+    monkeypatch.setattr(requests, "post", fail_post)
     
     run_ingest_main()
     
     resp = moto_s3_client.get_object(Bucket=bucket_name, Key="history.csv")
     updated_csv = resp["Body"].read().decode("utf-8")
     updated_df = pd.read_csv(io.StringIO(updated_csv))
-    
-    pushed_df = pd.read_csv(io.StringIO(captured["body_csv"]))
     
     from tax_bracket_ingest.parser.parser import (
         parse_irs_data_to_dataframe,
@@ -55,11 +48,7 @@ def test_run_ingest_end_to_end(
     new_df = process_irs_dataframe(parse_irs_data_to_dataframe(raw_struct))
     old_df = sample_normalized_df
 
-    # 6. Validate
-    assert captured["url"].endswith("/api/v1/tax/upload")
-    assert "X-API-KEY" in captured["headers"]
-    assert captured["headers"]["Content-Type"] == "text/csv"
-    assert dummy_response.content.decode("utf-8") == "dummy content"
+    # Validate S3 history update and ensure backend push never occurred.
     assert len(updated_df) == len(new_df) + len(old_df)
     pd.testing.assert_frame_equal(
         updated_df.iloc[:len(new_df)].reset_index(drop=True),
@@ -69,11 +58,5 @@ def test_run_ingest_end_to_end(
     pd.testing.assert_frame_equal(
         updated_df.iloc[len(new_df):].reset_index(drop=True),
         old_df.reset_index(drop=True),
-        check_dtype=False
-    )
-    
-    pd.testing.assert_frame_equal(
-        pushed_df.reset_index(drop=True),
-        new_df.reset_index(drop=True),
         check_dtype=False
     )
