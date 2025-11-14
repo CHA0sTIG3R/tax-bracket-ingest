@@ -1,6 +1,8 @@
-# Tax Bracket Ingest
+# RateAtlas · BracketForge (`rateatlas-ingest`)
 
-> **Annual microservice** that scrapes IRS tax bracket data for the current year, sends it to a Spring backend, and archives the data in S3.
+> Annual IRS ingestion microservice that scrapes, normalizes, and archives tax brackets for the RateAtlas platform.
+>
+> Part of the [RateAtlas](../README.md) stack.
 
 ## Overview
 
